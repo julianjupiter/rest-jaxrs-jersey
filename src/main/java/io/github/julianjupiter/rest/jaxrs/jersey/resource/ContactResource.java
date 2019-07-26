@@ -39,16 +39,9 @@ public class ContactResource {
     public Response findById(@PathParam("id") long id) throws Exception {
         LOGGER.info("Getting a contact...");
 
-        Contact contact = this.contactService.findById(id);
-
-        if (null == contact) {
-            throw new ContactNotFoundException("Contact with ID " + id + " not found.");
-        }
-
-        return Response
-                .ok()
-                .entity(contact)
-                .build();
+        return this.contactService.findById(id)
+                .map(contact -> Response.ok().entity(contact).build())
+                .orElseThrow(() -> new ContactNotFoundException("Contact with ID " + id + " not found."));
     }
 
     @POST
@@ -58,12 +51,9 @@ public class ContactResource {
         if (null != contact) {
             LocalDateTime createdAt = contact.getCreatedAt() != null ? contact.getCreatedAt() : LocalDateTime.now();
             contact.setCreatedAt(createdAt);
-            this.contactService.save(contact);
-
-            return Response
-                    .status(Response.Status.CREATED)
-                    .entity(contact)
-                    .build();
+            return this.contactService.save(contact)
+                    .map(contact1 -> Response.status(Response.Status.CREATED).entity(contact).build())
+                    .orElseThrow(() -> new RuntimeException("Unable to create resource."));
         } else {
             throw new BadRequestException("Unable to create resource.");
         }
@@ -72,17 +62,20 @@ public class ContactResource {
     @DELETE
     @Path("{id}")
     public Response delete(@PathParam("id") long id) throws Exception {
-        Contact contact = this.contactService.findById(id);
+        LOGGER.info("Deleting a contact...");
 
-        if (null != contact) {
-            this.contactService.delete(id);
+        return this.contactService.findById(id)
+                .map(contact1 -> {
+                    try {
+                        this.contactService.delete(id);
+                    } catch (Exception exception) {
+                        LOGGER.error(exception.getMessage());
+                        throw new RuntimeException("Error encountered in deleting the resource.");
+                    }
 
-            return Response
-                    .noContent()
-                    .build();
-        } else {
-            throw new BadRequestException("Resource with ID " + id + " does not exist.");
-        }
+                    return Response.noContent().build();
+                })
+                .orElseThrow(() -> new BadRequestException("Resource with ID " + id + " does not exist."));
     }
 
 }

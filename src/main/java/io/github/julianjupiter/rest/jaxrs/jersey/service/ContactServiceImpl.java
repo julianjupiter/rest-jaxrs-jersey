@@ -5,6 +5,7 @@ import io.github.julianjupiter.rest.jaxrs.jersey.model.repository.ContactReposit
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Optional;
 
 public class ContactServiceImpl implements ContactService {
 
@@ -21,17 +22,17 @@ public class ContactServiceImpl implements ContactService {
     }
 
     @Override
-    public Contact findById(long id) throws Exception {
+    public Optional<Contact> findById(long id) throws Exception {
         return this.contactRepository.findById(id);
     }
 
     @Override
-    public Contact save(Contact user) throws Exception {
+    public Optional<Contact> save(Contact user) throws Exception {
         return this.contactRepository.save(user);
     }
 
     @Override
-    public Contact update(Contact user) throws Exception {
+    public Optional<Contact> update(Contact user) throws Exception {
         return this.contactRepository.update(user);
     }
 

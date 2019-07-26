@@ -1,0 +1,1 @@
+mvn clean package && java -jar ./target/rest-jaxrs-jersey-1.0-SNAPSHOT.jar
