@@ -8,7 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
@@ -36,7 +42,7 @@ public class ContactResource {
 
     @GET
     @Path("{id}")
-    public Response findById(@PathParam("id") long id) throws Exception {
+    public Response findById(@PathParam("id") long id) {
         LOGGER.info("Getting a contact...");
 
         return this.contactService.findById(id)
@@ -45,14 +51,14 @@ public class ContactResource {
     }
 
     @POST
-    public Response create(Contact contact) throws Exception {
+    public Response create(Contact contact) {
         LOGGER.info("Creating a contact...");
 
         if (null != contact) {
             LocalDateTime createdAt = contact.getCreatedAt() != null ? contact.getCreatedAt() : LocalDateTime.now();
             contact.setCreatedAt(createdAt);
             return this.contactService.save(contact)
-                    .map(contact1 -> Response.status(Response.Status.CREATED).entity(contact).build())
+                    .map(c -> Response.status(Response.Status.CREATED).entity(c).build())
                     .orElseThrow(() -> new RuntimeException("Unable to create resource."));
         } else {
             throw new BadRequestException("Unable to create resource.");
@@ -61,18 +67,12 @@ public class ContactResource {
 
     @DELETE
     @Path("{id}")
-    public Response delete(@PathParam("id") long id) throws Exception {
+    public Response deleteById(@PathParam("id") long id)  {
         LOGGER.info("Deleting a contact...");
 
         return this.contactService.findById(id)
-                .map(contact1 -> {
-                    try {
-                        this.contactService.delete(id);
-                    } catch (Exception exception) {
-                        LOGGER.error(exception.getMessage());
-                        throw new RuntimeException("Error encountered in deleting the resource.");
-                    }
-
+                .map(c -> {
+                    this.contactService.deleteById(id);
                     return Response.noContent().build();
                 })
                 .orElseThrow(() -> new BadRequestException("Resource with ID " + id + " does not exist."));

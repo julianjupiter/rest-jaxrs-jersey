@@ -7,14 +7,12 @@ import java.util.Optional;
 
 public interface ContactRepository {
 
-    List<Contact> findAll() throws Exception;
+    List<Contact> findAll() throws RuntimeException;
 
-    Optional<Contact> findById(long id) throws Exception;
+    Optional<Contact> findById(long id) throws RuntimeException;
 
-    Optional<Contact> save(Contact user) throws Exception;
+    Optional<Contact> save(Contact user) throws RuntimeException;
 
-    Optional<Contact> update(Contact user) throws Exception;
-
-    void delete(long id) throws Exception;
+    void deleteById(long id) throws RuntimeException;
 
 }

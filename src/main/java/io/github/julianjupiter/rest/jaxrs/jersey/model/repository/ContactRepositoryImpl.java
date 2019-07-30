@@ -1,7 +1,6 @@
 package io.github.julianjupiter.rest.jaxrs.jersey.model.repository;
 
 import io.github.julianjupiter.rest.jaxrs.jersey.model.domain.Contact;
-import io.github.julianjupiter.rest.jaxrs.jersey.util.JpaUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,59 +17,53 @@ public class ContactRepositoryImpl implements ContactRepository {
     private EntityManager em;
 
     @Override
-    public List<Contact> findAll() throws Exception {
+    public List<Contact> findAll() throws RuntimeException {
         try {
             TypedQuery<Contact> query = em.createNamedQuery("Contact.findAll", Contact.class);
             return query.getResultList();
-        } catch (Exception exception) {
+        } catch (RuntimeException exception) {
             LOGGER.error("Unable to retrieve all contacts. {}", exception.getMessage());
-            throw new Exception("Unable to retrieve all contacts. " + exception.getMessage());
+            throw new RuntimeException("Unable to retrieve all contacts. " + exception.getMessage());
         }
     }
 
     @Override
-    public Optional<Contact> findById(long id) throws Exception {
+    public Optional<Contact> findById(long id) throws RuntimeException {
         try {
             return Optional.ofNullable(em.find(Contact.class, id));
-        } catch (Exception exception) {
+        } catch (RuntimeException exception) {
             LOGGER.error("Unable to retrieve contact with ID {}.", id);
-            throw new Exception("Unable to retrieve contact with ID " + id + ".");
+            throw new RuntimeException("Unable to retrieve contact with ID " + id + ".");
         }
     }
 
     @Override
-    public Optional<Contact> save(Contact contact) throws Exception {
+    public Optional<Contact> save(Contact contact) throws RuntimeException {
         try {
-            JpaUtil.beginTransaction(em);
-            em.persist(contact);
-            JpaUtil.commitTransaction(em);
-            LOGGER.info("Contact created.");
+            if (contact.getId() == 0) {
+                em.persist(contact);
+                LOGGER.info("Contact created.");
+            } else {
+                em.merge(contact);
+            }
+
             return Optional.ofNullable(contact);
-        } catch (Exception exception) {
-            JpaUtil.rollbackTransaction(em);
+        } catch (RuntimeException exception) {
             LOGGER.error("Unable to create contact.");
-            throw new Exception("Unable to create contact");
+            throw new RuntimeException("Unable to create contact");
         }
     }
 
     @Override
-    public Optional<Contact> update(Contact contact) throws Exception {
-        throw new UnsupportedOperationException("");
-    }
-
-    @Override
-    public void delete(long id) throws Exception {
+    public void deleteById(long id) throws RuntimeException {
         Optional<Contact> contactOptional = this.findById(id);
         if (contactOptional.isPresent()) {
             try {
-                JpaUtil.beginTransaction(em);
                 em.remove(contactOptional.get());
-                JpaUtil.commitTransaction(em);
                 LOGGER.info("Contact deleted.");
-            } catch (Exception exception) {
-                JpaUtil.rollbackTransaction(em);
+            } catch (RuntimeException exception) {
                 LOGGER.error("Unable to delete contact with ID {}.", id);
-                throw new Exception("Unable to delete contact with ID " + id + ".");
+                throw new RuntimeException("Unable to delete contact with ID " + id + ".");
             }
         }
     }
